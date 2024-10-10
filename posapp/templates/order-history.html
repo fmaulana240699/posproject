@@ -1,0 +1,92 @@
+{% extends 'base.html' %}
+
+<!-- {% block title %}Post List{% endblock %} -->
+
+{% block content %}
+          <div class="section-header">
+            <h1>Order History</h1>
+            <div class="section-header-breadcrumb">
+              <div class="breadcrumb-item active"><a href="#">Order</a></div>
+              <div class="breadcrumb-item"><a href="#">History</a></div>
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="row">
+              <div class="col-12">
+                <div class="card">
+                  <div class="card-header">
+
+                    <div class="card-header-form">
+                      <form>
+                        <div class="input-group">
+                          <input type="text" class="form-control" placeholder="Search">
+                          <div class="input-group-btn">
+                            <button class="btn btn-primary"><i class="fas fa-search"></i></button>
+                          </div>
+                        </div>
+                      </form>
+                    </div>
+                  </div>
+                  <div class="card-body p-0">
+                    <div class="table-responsive">
+                      <table class="table table-striped">
+                        <tr>
+                          <th>Ordered Menu</th>
+                          <th>Total Biaya</th>
+                          <th> Atas Nama </th>
+                          <th> Order Type </th>
+                          <th> Quantity </th>
+                          <th> Table Number </th>
+                          <th> Status </th>
+                          <th> Alamat </th>
+                        </tr>
+                        {% for data in datas %}
+                        <tr>
+                          <td>{{data.menu_item.nama_menu}}</td>
+                          <td> {{data.total_price}} </td>
+                          {% if data.atas_nama == None %}
+                          <td>-</td>
+                          {% else %}
+                          <td> {{data.atas_nama}} </td>
+                          {% endif %}
+                          <td> {{data.order_type}} </td>
+                          <td> {{data.quantity}} </td>
+                          {% if data.table_number == None %}
+                          <td>-</td>
+                          {% else %}
+                          <td> {{data.table_number}} </td>
+                          {% endif %}
+                          <td> {{data.status}} </td>
+                          {% if data.alamat == None %}
+                          <td>-</td>
+                          {% else %}
+                          <td> {{data.alamat}} </td>
+                          {% endif %}
+                        </tr>
+                        {% endfor %}
+                      </table>
+                    </div>
+                  </div>
+                  <div class="card-footer text-right">
+                    <nav class="d-inline-block">
+                      <ul class="pagination mb-0">
+                        <li class="page-item disabled">
+                          <a class="page-link" href="#" tabindex="-1"><i class="fas fa-chevron-left"></i></a>
+                        </li>
+                        <li class="page-item active"><a class="page-link" href="#">1 <span class="sr-only">(current)</span></a></li>
+                        <li class="page-item">
+                          <a class="page-link" href="#">2</a>
+                        </li>
+                        <li class="page-item"><a class="page-link" href="#">3</a></li>
+                        <li class="page-item">
+                          <a class="page-link" href="#"><i class="fas fa-chevron-right"></i></a>
+                        </li>
+                      </ul>
+                    </nav>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+{% endblock %}

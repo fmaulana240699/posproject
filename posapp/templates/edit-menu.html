@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+<!-- {% block title %}Post List{% endblock %} -->
+
+{% block content %}
+          <div class="section-header">
+            <h1>Edit {{form.nama_menu.value}} </h1>
+            <div class="section-header-breadcrumb">
+              <div class="breadcrumb-item active"><a href="#">Management</a></div>
+              <div class="breadcrumb-item"><a href="#">Menu</a></div>
+              <div class="breadcrumb-item">Edit</div>
+            </div>
+          </div>
+
+          <div class="section-body">
+            <div class="row">
+              <div class="col-12 col-md-6 col-lg-6">
+                <div class="card">
+                  <div class="card-body">
+                    <form method="POST">
+                      {% csrf_token %}
+                    <div class="form-group">
+                      <label>Nama Menu</label>
+                      <input type="text" class="form-control" name="nama_menu" value="{{form.nama_menu.value}}">
+                    </div>
+                    <div class="form-group">
+                      <label>Deskripsi</label>
+                      <input type="text" class="form-control" name="description" value="{{form.description.value}}">
+                    </div>
+                    <div class="form-group">
+                      <label>Harga</label>
+                      <div class="input-group">
+                        <div class="input-group-prepend">
+                          <div class="input-group-text">
+                            $
+                          </div>
+                        </div>
+                        <input type="text" class="form-control currency" name="harga" value="{{form.harga.value}}">
+                      </div>
+                    </div>
+                    <div class="form-group row mb-4">
+                      <label class="col-form-label text-md-left col-12 col-md-3 col-lg-3">Gambar Makanan</label>
+                      <div class="col-sm-12 col-md-7">
+                        <div id="image-preview" class="image-preview">
+                          <label for="image-upload" id="image-label">Choose File</label>
+                          <input type="file" name="image" id="image-upload" />
+                        </div>
+                      </div>
+                    </div>
+                    <button class="btn btn-primary">Submit</button>
+                  </form>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+{% endblock %}

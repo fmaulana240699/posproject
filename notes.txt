@@ -1,0 +1,35 @@
+nav menu management jadi dropdown > satuin
+remove checkbox bulk action
+active nav
+
+done:
+- finishing template + url #done
+- templates sisi client #done
+- logic generate qr code per table id + views nya #done
+- quantity per menu item #done
+- tambah alamat + atas nama di table order #done
+- fitur pembayaran langsung hardcode aja #done
+- checkout per table #done
+- put category in menu #done
+- tombol cancel and confirm payment #done
+- cart ada fitur remove #done
+- order quantity in history order #done
+- perlu add form name + alamat #done
+- login admin #done
+- restrict admin page #done
+- order per dish category #done
+
+todo:
+- tiap ada order, bahan baku harus berkurang (associate menu item with bahan baku)
+- auto print
+- upload gambar
+- dashboard page
+- kasih alert or pop up after action
+- finalize design template
+
+optional:
+- refactor confirm payment
+- disable checkout when empty
+- pikirin order number
+- beverage + dish + dessert bisa disatu keknya
+- refactor order & cart > mungkin cart pake localstorage, order pake db
