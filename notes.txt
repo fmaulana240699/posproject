@@ -18,9 +18,11 @@ done:
 - login admin #done
 - restrict admin page #done
 - order per dish category #done
+- tiap ada order, bahan baku harus berkurang (associate menu item with bahan baku) #done
 
 todo:
-- tiap ada order, bahan baku harus berkurang (associate menu item with bahan baku)
+- kalo decimal bermasalah kurangi stock nya
+- button tambah row di list ingredient add menu item
 - auto print
 - upload gambar
 - dashboard page

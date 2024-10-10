@@ -1,11 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
-# from django.contrib.auth import views as auth_views
 from django.contrib.auth.decorators import login_required, user_passes_test
 from io import BytesIO
 from .forms import MenuForm, BahanBakuForm
-from .models import MenuItem, BahanBaku, TableQr, Order
+from .models import MenuItem, BahanBaku, TableQr, Order, BahanBakuPerMenu
 import qrcode
 import base64
 import json
@@ -30,25 +29,28 @@ def form_menu(request):
     if request.method == 'POST':
         form = MenuForm(request.POST)
         if form.is_valid():
-            form.save()
-            return redirect('/')
-
-    return render(request, 'form-menu.html')
+            menu_instance = form.save()
+            bahan_baku=BahanBaku.objects.get(id=request.POST.get('bahan_baku'))
+            BahanBakuPerMenu.objects.create(
+                bahan_baku=bahan_baku,
+                quantity=request.POST.get('quantity'),
+                menu_item=menu_instance
+            )
+            return redirect('/menu')
+    data_bahan_baku = BahanBaku.objects.all()
+    return render(request, 'form-menu.html', {'data_bahan_baku': data_bahan_baku})
 
 @login_required
 @user_passes_test(is_admin)
 def edit_menu(request, menu_id):
-    # Fetch the product from the database
     data_menu = get_object_or_404(MenuItem, id=menu_id)
 
     if request.method == 'POST':
-        # Populate the form with the POST data and the existing instance
         form = MenuForm(request.POST, instance=data_menu)
         if form.is_valid():
-            form.save()  # This will update the existing product in the database
-            return redirect('/')  # Redirect to the list or success page
+            form.save()
+            return redirect('/')
     else:
-        # Prepopulate the form with existing data
         form = MenuForm(instance=data_menu)
 
     return render(request, 'edit-menu.html', {'form': form})
@@ -57,8 +59,6 @@ def edit_menu(request, menu_id):
 @user_passes_test(is_admin)
 def delete_menu(request, menu_id):
     menu_item = get_object_or_404(MenuItem, id=menu_id)
-
-    # if request.method == 'POST':
     menu_item.delete()
     return redirect('/')
 
@@ -71,17 +71,14 @@ def management_stock(request):
 @login_required
 @user_passes_test(is_admin)
 def edit_stock(request, stock_id):
-    # Fetch the product from the database
     data_stock = get_object_or_404(BahanBaku, id=stock_id)
 
     if request.method == 'POST':
-        # Populate the form with the POST data and the existing instance
         form = BahanBakuForm(request.POST, instance=data_stock)
         if form.is_valid():
-            form.save()  # This will update the existing product in the database
-            return redirect('/')  # Redirect to the list or success page
+            form.save()
+            return redirect('/')
     else:
-        # Prepopulate the form with existing data
         form = BahanBakuForm(instance=data_stock)
 
     return render(request, 'edit-stock.html', {'form': form})
@@ -101,8 +98,6 @@ def form_stock(request):
 @user_passes_test(is_admin)
 def delete_stock(request, stock_id):
     stock = get_object_or_404(BahanBaku, id=stock_id)
-
-    # if request.method == 'POST':
     stock.delete()
     return redirect('/')
 
@@ -179,6 +174,15 @@ def order(request):
 
 def order_delete(request, order_id):
     order = get_object_or_404(Order, id=order_id)
+    menu_item = order.menu_item
+    quantity = order.quantity
+
+    check_stock = BahanBakuPerMenu.objects.filter(menu_item=menu_item)
+    for item in check_stock:
+        ingredient = item.bahan_baku
+        ingredient.stock += item.quantity * quantity
+        ingredient.save()
+
     order.delete()
     return redirect('/cart')
 
@@ -196,6 +200,13 @@ def order_menu(request, category, table_number=None):
 
         total_price = menu_item.harga * quantity
 
+        #check stock
+        check_stock = BahanBakuPerMenu.objects.filter(menu_item=menu_item)
+        for item in check_stock:
+            if item.bahan_baku.stock < item.quantity * quantity:
+                return JsonResponse({'success': False, 'message': 'Stock bahan baku habis'})
+
+
         order_data = {
             "menu_item": menu_item,
             "quantity": quantity,
@@ -211,6 +222,12 @@ def order_menu(request, category, table_number=None):
 
         order = Order(**order_data)
         order.save()
+
+        # Decrease stock for each ingredient
+        for item in check_stock:
+            ingredient = item.bahan_baku
+            ingredient.stock -= item.quantity * quantity
+            ingredient.save()
 
         return JsonResponse({'success': True, 'message': 'Item added to cart'})
 
