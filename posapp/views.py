@@ -27,18 +27,29 @@ def management_menu(request):
 @user_passes_test(is_admin)
 def form_menu(request):
     if request.method == 'POST':
-        form = MenuForm(request.POST)
+        form = MenuForm(request.POST, request.FILES)
         if form.is_valid():
             menu_instance = form.save()
-            bahan_baku=BahanBaku.objects.get(id=request.POST.get('bahan_baku'))
-            BahanBakuPerMenu.objects.create(
-                bahan_baku=bahan_baku,
-                quantity=request.POST.get('quantity'),
-                menu_item=menu_instance
-            )
+
+            # Get lists of bahan_baku and their quantities from the form
+            bahan_baku_ids = request.POST.getlist('bahan_baku')
+            quantities = request.POST.getlist('quantity')
+
+            # Iterate over the lists to create entries in BahanBakuPerMenu
+            for bahan_baku_id, quantity in zip(bahan_baku_ids, quantities):
+                bahan_baku = BahanBaku.objects.get(id=bahan_baku_id)
+                BahanBakuPerMenu.objects.create(
+                    bahan_baku=bahan_baku,
+                    quantity=quantity,
+                    menu_item=menu_instance
+                )
+
             return redirect('/menu')
+
+    # If it's a GET request, fetch all Bahan Baku data
     data_bahan_baku = BahanBaku.objects.all()
     return render(request, 'form-menu.html', {'data_bahan_baku': data_bahan_baku})
+
 
 @login_required
 @user_passes_test(is_admin)

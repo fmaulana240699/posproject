@@ -12,7 +12,7 @@ class MenuItem(models.Model):
     harga = models.IntegerField(null=True)
     category = models.CharField(choices=[('beverages', 'Beverages'), ('dishes', 'Dishes'), ('dessert', 'Dessert')], max_length=10, null=True)
     bahan_baku = models.ManyToManyField(BahanBaku, null=True)
-    # gambar
+    gambar = models.ImageField(upload_to='menu_images/', null=True, blank=True)
 
 class BahanBakuPerMenu(models.Model):
     menu_item = models.ForeignKey(MenuItem, on_delete=models.CASCADE, null=True)

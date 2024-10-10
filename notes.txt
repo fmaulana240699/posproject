@@ -19,12 +19,15 @@ done:
 - restrict admin page #done
 - order per dish category #done
 - tiap ada order, bahan baku harus berkurang (associate menu item with bahan baku) #done
+- button tambah row di list ingredient add menu item #done
+- ubah upload file type input #done
+- upload gambar #done
+- deduct stock cuma 1 menu, di table yg ke add cuma 1 anw #done
 
 todo:
 - kalo decimal bermasalah kurangi stock nya
-- button tambah row di list ingredient add menu item
+- stock harus selaras satuannya
 - auto print
-- upload gambar
 - dashboard page
 - kasih alert or pop up after action
 - finalize design template
