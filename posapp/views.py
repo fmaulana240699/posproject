@@ -5,7 +5,12 @@ from django.contrib.auth.decorators import login_required, user_passes_test
 from decimal import Decimal
 from io import BytesIO
 from .forms import MenuForm, BahanBakuForm
-from .models import MenuItem, BahanBaku, TableQr, Order, BahanBakuPerMenu
+from .models import MenuItem, BahanBaku, TableQr, Order, BahanBakuPerMenu, Invoice
+from django.http import HttpResponse
+from django.template.loader import get_template
+from xhtml2pdf import pisa
+# from django.template.loader import render_to_string
+# from weasyprint import HTML
 import qrcode
 import base64
 import json
@@ -363,5 +368,31 @@ def checkout(request):
 def process(request):
     session_id = request.session.session_key
     cart_items = Order.objects.filter(session_id=session_id, status='Cart')
+    total_price = sum(item.menu_item.harga.to_decimal() * item.quantity.to_decimal() for item in cart_items)
+    invoice = Invoice.objects.create(total_harga=total_price)
+    invoice.order_item.add(*cart_items)
     cart_items.update(status="Paid")
-    return redirect("/order")
+
+
+    inv_data = Order.objects.filter(invoice=invoice)
+
+    context = {
+        'datas': inv_data,
+        'harga_akhir': total_price,
+        'invoice_id': invoice.id,
+    }
+
+    # # Render the HTML template as a PDF
+    template = get_template('guest/invoice_pdf.html')
+    html = template.render(context)
+    response = HttpResponse(content_type='application/pdf')
+    response['Content-Disposition'] = 'attachment; filename="invoice.pdf"'
+
+    # Create a PDF from the HTML
+    pisa_status = pisa.CreatePDF(html, dest=response)
+
+    # If there is an error, show it in the browser
+    if pisa_status.err:
+        return HttpResponse('We had some errors with generating your invoice PDF.')
+
+    return response

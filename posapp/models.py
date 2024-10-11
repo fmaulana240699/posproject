@@ -32,6 +32,12 @@ class Order(models.Model):
     created_at = models.DateTimeField(auto_now_add=True, null=True)
     updated_at = models.DateTimeField(auto_now=True, null=True)
 
+class Invoice(models.Model):
+    order_item = models.ManyToManyField(Order)
+    total_harga = models.IntegerField(null=True)
+    created_at = models.DateTimeField(auto_now_add=True, null=True)
+    updated_at = models.DateTimeField(auto_now=True, null=True)
+
 class TableQr(models.Model):
     qr_code = models.TextField(blank=True, null=True)
     table_number = models.IntegerField(null=True)

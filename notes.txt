@@ -23,17 +23,22 @@ done:
 - ubah upload file type input #done
 - upload gambar #done
 - deduct stock cuma 1 menu, di table yg ke add cuma 1 anw #done
-- kalo decimal bermasalah kurangi stock nya
+- kalo decimal bermasalah kurangi stock nya #done
+- benerin redirect #done
+- benerin icon #done
+- auto print #done
 
 todo:
-- benerin redirect
-- benerin icon
-- benerin url
+- dashboard page
+- bedain link nav order online / dine in
+- bedain struk online / dine in
 - kasih alert or pop up after action
+- benerin active url
 - finalize design template
 - stock harus selaras satuannya
-- auto print
-- dashboard page
+- no hape / email untuk konfirmasi pengiriman
+- styling invoice
+
 
 optional:
 - refactor confirm payment
