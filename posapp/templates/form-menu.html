@@ -61,7 +61,7 @@
                                     {% endfor %}
                                 </select>
                                 <label>Jumlah</label>
-                                <input type="number" class="form-control" name="quantity">
+                                <input type="number" class="form-control" name="quantity" min="0" step="0.01">
                             </div>
                         </div>
 
@@ -97,6 +97,8 @@
                         quantityInput.type = 'number';
                         quantityInput.name = 'quantity';
                         quantityInput.classList.add('form-control');
+                        quantityInput.min = "0";          // Set minimum value to 0
+                        quantityInput.step = "0.01";      // Set step to 0.01 for decimal input
 
                         // Create the label for the input field
                         const quantityLabel = document.createElement('label');

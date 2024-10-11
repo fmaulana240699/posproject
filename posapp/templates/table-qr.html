@@ -18,7 +18,7 @@
                   <div class="card-header">
                     <form action="/table-qr/generate" method="POST">
                       {% csrf_token %}
-                    Table Number <input type="number" name="table_number">
+                    Table Number <input type="number" name="table_number" required>
                     <button class="btn btn-success" type="submit">Generate New QR</button>
                     </form>
                     <div class="card-header-form">

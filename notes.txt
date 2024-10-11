@@ -23,14 +23,17 @@ done:
 - ubah upload file type input #done
 - upload gambar #done
 - deduct stock cuma 1 menu, di table yg ke add cuma 1 anw #done
+- kalo decimal bermasalah kurangi stock nya
 
 todo:
-- kalo decimal bermasalah kurangi stock nya
+- benerin redirect
+- benerin icon
+- benerin url
+- kasih alert or pop up after action
+- finalize design template
 - stock harus selaras satuannya
 - auto print
 - dashboard page
-- kasih alert or pop up after action
-- finalize design template
 
 optional:
 - refactor confirm payment

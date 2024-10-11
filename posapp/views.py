@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
+from decimal import Decimal
 from io import BytesIO
 from .forms import MenuForm, BahanBakuForm
 from .models import MenuItem, BahanBaku, TableQr, Order, BahanBakuPerMenu
@@ -60,7 +61,7 @@ def edit_menu(request, menu_id):
         form = MenuForm(request.POST, instance=data_menu)
         if form.is_valid():
             form.save()
-            return redirect('/')
+            return redirect('/menu')
     else:
         form = MenuForm(instance=data_menu)
 
@@ -71,7 +72,7 @@ def edit_menu(request, menu_id):
 def delete_menu(request, menu_id):
     menu_item = get_object_or_404(MenuItem, id=menu_id)
     menu_item.delete()
-    return redirect('/')
+    return redirect('/menu')
 
 @login_required
 @user_passes_test(is_admin)
@@ -88,7 +89,7 @@ def edit_stock(request, stock_id):
         form = BahanBakuForm(request.POST, instance=data_stock)
         if form.is_valid():
             form.save()
-            return redirect('/')
+            return redirect('/stock')
     else:
         form = BahanBakuForm(instance=data_stock)
 
@@ -101,7 +102,7 @@ def form_stock(request):
         form = BahanBakuForm(request.POST)
         if form.is_valid():
             form.save()
-            return redirect('/')
+            return redirect('/stock')
 
     return render(request, 'form-stock.html')
 
@@ -110,7 +111,7 @@ def form_stock(request):
 def delete_stock(request, stock_id):
     stock = get_object_or_404(BahanBaku, id=stock_id)
     stock.delete()
-    return redirect('/')
+    return redirect('/stock')
 
 @login_required
 @user_passes_test(is_admin)
@@ -147,14 +148,14 @@ def generate_qr(request):
     base64_image = base64.b64encode(buffer.getvalue()).decode('utf-8')
     table.qr_code=base64_image
     table.save()
-    return redirect('/')
+    return redirect('/table-qr')
 
 @login_required
 @user_passes_test(is_admin)
 def delete_table(request, table_id):
     table = get_object_or_404(TableQr, id=table_id)
     table.delete()
-    return redirect('/')
+    return redirect('/table-qr')
 
 
 def login_view(request):
@@ -186,12 +187,17 @@ def order(request):
 def order_delete(request, order_id):
     order = get_object_or_404(Order, id=order_id)
     menu_item = order.menu_item
-    quantity = order.quantity
+    quantity = order.quantity.to_decimal()
 
     check_stock = BahanBakuPerMenu.objects.filter(menu_item=menu_item)
     for item in check_stock:
         ingredient = item.bahan_baku
-        ingredient.stock += item.quantity * quantity
+        item_quantity = item.quantity.to_decimal()
+        print(type(item_quantity))
+        print(type(quantity))
+        updated_stock = ingredient.stock.to_decimal()
+        updated_stock += item_quantity * quantity
+        ingredient.stock = updated_stock
         ingredient.save()
 
     order.delete()
@@ -205,18 +211,22 @@ def order_menu(request, category, table_number=None):
             request.session.create()  # Create a session if it doesn't exist
             session_id = request.session.session_key
         menu_item = MenuItem.objects.get(id=data.get("menu_item"))
-        quantity = data.get("quantity")
+        quantity = Decimal(data.get("quantity"))  # Convert to Decimal
         status = data.get("status")
         order_type = data.get("order_type")
 
-        total_price = menu_item.harga * quantity
+        total_price = menu_item.harga.to_decimal() * quantity
 
-        #check stock
+        # Check stock
         check_stock = BahanBakuPerMenu.objects.filter(menu_item=menu_item)
         for item in check_stock:
-            if item.bahan_baku.stock < item.quantity * quantity:
-                return JsonResponse({'success': False, 'message': 'Stock bahan baku habis'})
+            # Convert MongoDB Decimal128 to Python's Decimal
+            stock_quantity = item.quantity.to_decimal()  # Convert Decimal128 to Decimal
+            stock_value = item.bahan_baku.stock.to_decimal()  # Convert stock Decimal128 to Decimal
 
+            # Compare stock with the required quantity
+            if stock_value < stock_quantity * quantity:
+                return JsonResponse({'success': False, 'message': 'Stock bahan baku habis'})
 
         order_data = {
             "menu_item": menu_item,
@@ -225,10 +235,10 @@ def order_menu(request, category, table_number=None):
             "order_type": order_type,
             "session_id": session_id,
             "total_price": total_price,
-            }
+        }
 
         if data.get("table_number") != "None":
-            order_data["table_number"]=data.get("table_number")
+            order_data["table_number"] = data.get("table_number")
             order_data["order_type"] = "Dine-In"
 
         order = Order(**order_data)
@@ -237,13 +247,21 @@ def order_menu(request, category, table_number=None):
         # Decrease stock for each ingredient
         for item in check_stock:
             ingredient = item.bahan_baku
-            ingredient.stock -= item.quantity * quantity
+            quantity_item = item.quantity.to_decimal()
+            stock_decimal = ingredient.stock.to_decimal()
+
+            # Update stock by subtracting the required quantity
+            updated_stock = stock_decimal - (quantity_item * quantity)
+
+            # Convert updated stock back to Decimal128
+            ingredient.stock = Decimal(str(updated_stock))
             ingredient.save()
 
         return JsonResponse({'success': True, 'message': 'Item added to cart'})
 
     data = MenuItem.objects.filter(category=category)
     return render(request, 'guest/order.html', {'datas': data, 'table_number': table_number, 'category': category})
+
 
 def order_history(request):
     data = Order.objects.all()
@@ -339,11 +357,11 @@ def checkout(request):
 
     session_id = request.session.session_key
     cart_items = Order.objects.filter(session_id=session_id, status='Cart')
-    total_price = sum(item.menu_item.harga * item.quantity for item in cart_items)
+    total_price = sum(item.menu_item.harga.to_decimal() * item.quantity.to_decimal() for item in cart_items)
     return render(request, 'guest/checkout.html', {'datas': cart_items, 'harga_akhir': total_price})
 
 def process(request):
     session_id = request.session.session_key
     cart_items = Order.objects.filter(session_id=session_id, status='Cart')
     cart_items.update(status="Paid")
-    return redirect("/")
+    return redirect("/order")
