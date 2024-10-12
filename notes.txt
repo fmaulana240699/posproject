@@ -27,17 +27,18 @@ done:
 - benerin redirect #done
 - benerin icon #done
 - auto print #done
+- bedain struk online / dine in #done
+- bedain link nav order online / dine in #done
+- cart ga ada table number #done
 
 todo:
-- dashboard page
-- bedain link nav order online / dine in
-- bedain struk online / dine in
 - kasih alert or pop up after action
 - benerin active url
 - finalize design template
 - stock harus selaras satuannya
 - no hape / email untuk konfirmasi pengiriman
 - styling invoice
+- dashboard page
 
 
 optional:
@@ -46,3 +47,57 @@ optional:
 - pikirin order number
 - beverage + dish + dessert bisa disatu keknya
 - refactor order & cart > mungkin cart pake localstorage, order pake db
+
+
+
+
+
+
+####### Dashboard Query ########
+
+today = timezone.now().date()
+start_of_week = today - timedelta(days=today.weekday())  # Monday as the start of the week
+start_of_month = today.replace(day=1)
+
+# Per day
+most_bought_day = Order.objects.filter(created_at__date=today) \
+    .values('menu_item__nama_menu') \
+    .annotate(total_bought=Count('menu_item')) \
+    .order_by('-total_bought')
+
+# Per week
+most_bought_week = Order.objects.filter(created_at__date__gte=start_of_week) \
+    .values('menu_item__nama_menu') \
+    .annotate(total_bought=Count('menu_item')) \
+    .order_by('-total_bought')
+
+# Per month
+most_bought_month = Order.objects.filter(created_at__date__gte=start_of_month) \
+    .values('menu_item__nama_menu') \
+    .annotate(total_bought=Count('menu_item')) \
+    .order_by('-total_bought')
+
+
+# Per day
+total_invoice_items_day = Invoice.objects.filter(created_at__date=today) \
+    .aggregate(total_items=Sum('order_item__quantity'))
+
+# Per week
+total_invoice_items_week = Invoice.objects.filter(created_at__date__gte=start_of_week) \
+    .aggregate(total_items=Sum('order_item__quantity'))
+
+# Per month
+total_invoice_items_month = Invoice.objects.filter(created_at__date__gte=start_of_month) \
+    .aggregate(total_items=Sum('order_item__quantity'))
+
+# Per day
+total_harga_day = Invoice.objects.filter(created_at__date=today) \
+    .aggregate(total_harga=Sum('total_harga'))
+
+# Per week
+total_harga_week = Invoice.objects.filter(created_at__date__gte=start_of_week) \
+    .aggregate(total_harga=Sum('total_harga'))
+
+# Per month
+total_harga_month = Invoice.objects.filter(created_at__date__gte=start_of_month) \
+    .aggregate(total_harga=Sum('total_harga'))

@@ -121,6 +121,9 @@ def delete_stock(request, stock_id):
 @login_required
 @user_passes_test(is_admin)
 def dashboard_penjualan(request):
+    total_order = Invoice.objects.count()
+    total_menu_terjual = Order.objects.count()
+    #total penjualan
     return render(request, 'index.html')
 
 @login_required
@@ -208,15 +211,15 @@ def order_delete(request, order_id):
     order.delete()
     return redirect('/cart')
 
-def order_menu(request, category, table_number=None):
+def order_menu(request, category):
     if request.method == "POST":
         data = json.loads(request.body)
         session_id = request.session.session_key
         if not session_id:
-            request.session.create()  # Create a session if it doesn't exist
+            request.session.create()
             session_id = request.session.session_key
         menu_item = MenuItem.objects.get(id=data.get("menu_item"))
-        quantity = Decimal(data.get("quantity"))  # Convert to Decimal
+        quantity = Decimal(data.get("quantity"))
         status = data.get("status")
         order_type = data.get("order_type")
 
@@ -226,8 +229,8 @@ def order_menu(request, category, table_number=None):
         check_stock = BahanBakuPerMenu.objects.filter(menu_item=menu_item)
         for item in check_stock:
             # Convert MongoDB Decimal128 to Python's Decimal
-            stock_quantity = item.quantity.to_decimal()  # Convert Decimal128 to Decimal
-            stock_value = item.bahan_baku.stock.to_decimal()  # Convert stock Decimal128 to Decimal
+            stock_quantity = item.quantity.to_decimal()
+            stock_value = item.bahan_baku.stock.to_decimal()
 
             # Compare stock with the required quantity
             if stock_value < stock_quantity * quantity:
@@ -265,82 +268,17 @@ def order_menu(request, category, table_number=None):
         return JsonResponse({'success': True, 'message': 'Item added to cart'})
 
     data = MenuItem.objects.filter(category=category)
-    return render(request, 'guest/order.html', {'datas': data, 'table_number': table_number, 'category': category})
+    return render(request, 'guest/order.html', {'datas': data, 'category': category})
+
+
+def order_guest(request, category, table_number=None):
+    data = MenuItem.objects.filter(category=category)
+    return render(request, 'guest/order-guest.html', {'datas': data, 'table_number': table_number, 'category': category})
 
 
 def order_history(request):
     data = Order.objects.all()
     return render(request, 'order-history.html', {'datas': data})
-
-# def order_dishes(request, table_number=None):
-#     if request.method == "POST":
-#         data = json.loads(request.body)
-#         session_id = request.session.session_key
-#         if not session_id:
-#             request.session.create()  # Create a session if it doesn't exist
-#             session_id = request.session.session_key
-#         menu_item = MenuItem.objects.get(id=data.get("menu_item"))
-#         quantity = data.get("quantity")
-#         status = data.get("status")
-#         order_type = data.get("order_type")
-
-#         total_price = menu_item.harga * quantity
-
-#         order_data = {
-#             "menu_item": menu_item,
-#             "quantity": quantity,
-#             "status": status,
-#             "order_type": order_type,
-#             "session_id": session_id,
-#             "total_price": total_price,
-#             }
-
-#         if data.get("table_number") != "None":
-#             order_data["table_number"]=data.get("table_number")
-#             order_data["order_type"] = "Dine-In"
-
-#         order = Order(**order_data)
-#         order.save()
-
-#         return JsonResponse({'success': True, 'message': 'Item added to cart'})
-
-#     data = MenuItem.objects.filter(category="dishes")
-#     return render(request, 'guest/dishes.html', {'datas': data, 'table_number': table_number})
-
-# def order_dessert(request, table_number=None):
-#     if request.method == "POST":
-#         data = json.loads(request.body)
-#         session_id = request.session.session_key
-#         if not session_id:
-#             request.session.create()  # Create a session if it doesn't exist
-#             session_id = request.session.session_key
-#         menu_item = MenuItem.objects.get(id=data.get("menu_item"))
-#         quantity = data.get("quantity")
-#         status = data.get("status")
-#         order_type = data.get("order_type")
-
-#         total_price = menu_item.harga * quantity
-
-#         order_data = {
-#             "menu_item": menu_item,
-#             "quantity": quantity,
-#             "status": status,
-#             "order_type": order_type,
-#             "session_id": session_id,
-#             "total_price": total_price,
-#             }
-
-#         if data.get("table_number") != "None":
-#             order_data["table_number"]=data.get("table_number")
-#             order_data["order_type"] = "Dine-In"
-
-#         order = Order(**order_data)
-#         order.save()
-
-#         return JsonResponse({'success': True, 'message': 'Item added to cart'})
-
-#     data = MenuItem.objects.filter(category="dishes")
-#     return render(request, 'guest/dessert.html', {'datas': data, 'table_number': table_number})
 
 def cart(request):
     session_id = request.session.session_key
