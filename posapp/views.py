@@ -4,16 +4,71 @@ from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required, user_passes_test
 from decimal import Decimal
 from io import BytesIO
+from django.db.models import Count
+from django.utils import timezone
+from datetime import timedelta
 from .forms import MenuForm, BahanBakuForm
 from .models import MenuItem, BahanBaku, TableQr, Order, BahanBakuPerMenu, Invoice
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-# from django.template.loader import render_to_string
-# from weasyprint import HTML
+from django.db.models import Sum
 import qrcode
 import base64
 import json
+
+
+### Query Dashboard ###
+def sum_function(data, name_key, quantity_key):
+    result = dict()
+    for item in data:
+        if item[name_key] not in result:
+            result[item[name_key]] = 0
+        result[item[name_key]] += int(item[quantity_key])
+    return result
+
+def most_ordered_item_query(start, end):
+    data = Order.objects.filter(created_at__range=(start, end), status="Paid") \
+    .values('menu_item__nama_menu') \
+    .annotate(total_bought=Count('menu_item')) \
+    .order_by('-total_bought')[:5]
+    return data
+
+def invoice_query(start, end):
+    invoices = Invoice.objects.filter(created_at__range=(start, end))
+    data = len(invoices)
+    return data
+
+def total_order_query(start, end):
+    order = Order.objects.filter(created_at__range=(start, end), status="Paid")
+    data = len(order)
+    return data
+
+def total_income(start, end):
+    total_harga = Invoice.objects.filter(created_at__range=(start, end)).values("total_harga")
+    sum_values = 0
+    for d in total_harga:
+        if "total_harga" in d:
+            sum_values += d["total_harga"]
+
+    print(sum_values)
+    return sum_values
+
+def total_order_permenu(start, end):
+    orders_today = Order.objects.filter(
+        created_at__range=[start, end]
+    ).values('menu_item__nama_menu', 'quantity', 'total_price')
+    testing = []
+    for x in orders_today:
+        testing.append({
+            "nama_menu": x["menu_item__nama_menu"],
+            "quantity": x["quantity"].to_decimal(),
+            "total_price": x["total_price"]
+        })
+
+    result = sum_function(testing, "nama_menu", "quantity")
+
+    return result
 
 def is_admin(user):
     return user.is_superuser
@@ -26,7 +81,11 @@ def index(request):
 @login_required
 @user_passes_test(is_admin)
 def management_menu(request):
-    menus = MenuItem.objects.all()
+    query = request.GET.get('q')
+    if query:
+        menus = MenuItem.objects.filter(nama_menu__icontains=query)
+    else:
+        menus = MenuItem.objects.all()
     return render(request, 'management-menu.html', {'datas': menus})
 
 @login_required
@@ -82,7 +141,11 @@ def delete_menu(request, menu_id):
 @login_required
 @user_passes_test(is_admin)
 def management_stock(request):
-    bahan_baku = BahanBaku.objects.all()
+    query = request.GET.get('q')
+    if query:
+        bahan_baku = BahanBaku.objects.filter(name__icontains=query)
+    else:
+        bahan_baku = BahanBaku.objects.all()
     return render(request, 'management-stock.html', {'datas': bahan_baku})
 
 @login_required
@@ -120,11 +183,32 @@ def delete_stock(request, stock_id):
 
 @login_required
 @user_passes_test(is_admin)
-def dashboard_penjualan(request):
-    total_order = Invoice.objects.count()
-    total_menu_terjual = Order.objects.count()
-    #total penjualan
-    return render(request, 'index.html')
+def dashboard_penjualan(request, range_filter=None):
+    now = timezone.now()
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    start_of_week = today_start - timedelta(days=today_start.weekday())
+    start_of_month = today_start.replace(day=1)
+
+    if range_filter == 'weekly':
+        today_start = start_of_week
+    elif range_filter == 'monthly':
+        today_start = start_of_month
+    else:
+        today_start = today_start
+
+    data_most_menu = most_ordered_item_query(today_start, today_end)
+    order_permenu = total_order_permenu(today_start, today_end)
+    data_income = total_income(today_start, today_end)
+    response_data = {
+        "most_menu": list(data_most_menu),
+        "total_inv": invoice_query(today_start, today_end),
+        "total_order": total_order_query(today_start, today_end),
+        "total_penjualan_permenu": order_permenu,
+        "data_income": data_income
+
+    }
+    return render(request, 'index.html', {'response_data': response_data})
 
 @login_required
 @user_passes_test(is_admin)
@@ -245,7 +329,7 @@ def order_menu(request, category):
             "total_price": total_price,
         }
 
-        if data.get("table_number") != "None":
+        if data.get("table_number"):
             order_data["table_number"] = data.get("table_number")
             order_data["order_type"] = "Dine-In"
 

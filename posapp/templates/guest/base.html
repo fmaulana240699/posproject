@@ -54,9 +54,9 @@
           </div>
           <ul class="sidebar-menu">
             <li class="menu-header">List Menu</li>
-            <li><a class="nav-link" href="/order/beverages"><i><img src="{% static 'assets/img/rice-bowl.png' %}"></i><span>Beverages</span></a></li>
-            <li><a class="nav-link" href="/order/dishes"><i><img src="{% static 'assets/img/cupcake.png' %}"></i> <span>Dishes</span></a></li>
-            <li><a class="nav-link" href="/order/dessert"><i><img src="{% static 'assets/img/coffee-cup.png' %}"></i> <span>Dessert</span></a></li>
+            <li class="{% if request.path == '/order/beverages' %} active {% endif %}"><a class="nav-link" href="/order/beverages"><i><img src="{% static 'assets/img/rice-bowl.png' %}"></i><span>Beverages</span></a></li>
+            <li class="{% if request.path == '/order/dishes' %} active {% endif %}"><a class="nav-link" href="/order/dishes"><i><img src="{% static 'assets/img/cupcake.png' %}"></i> <span>Dishes</span></a></li>
+            <li class="{% if request.path == '/order/dessert' %} active {% endif %}"><a class="nav-link" href="/order/dessert"><i><img src="{% static 'assets/img/coffee-cup.png' %}"></i> <span>Dessert</span></a></li>
       </div>
 
       <!-- Main Content -->

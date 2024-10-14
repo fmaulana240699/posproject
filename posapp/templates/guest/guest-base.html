@@ -54,9 +54,9 @@
           </div>
           <ul class="sidebar-menu">
             <li class="menu-header">List Menu</li>
-            <li><a class="nav-link" href="/order/beverages/{{table_number}}"><i><img src="{% static 'assets/img/rice-bowl.png' %}"></i><span>Beverages</span></a></li>
-            <li><a class="nav-link" href="/order/dishes/{{table_number}}"><i><img src="{% static 'assets/img/cupcake.png' %}"></i> <span>Dishes</span></a></li>
-            <li><a class="nav-link" href="/order/dessert/{{table_number}}"><i><img src="{% static 'assets/img/coffee-cup.png' %}"></i> <span>Dessert</span></a></li>
+            <li class="{% if request.path == '/order/beverages/{{table_number}}/' %} active {% endif %}"><a class="nav-link" href="/order/beverages/{{table_number}}"><i><img src="{% static 'assets/img/rice-bowl.png' %}"></i><span>Beverages</span></a></li>
+            <li class="{% if request.path == '/order/dishes/{{table_number}}/' %} active {% endif %}"><a class="nav-link" href="/order/dishes/{{table_number}}"><i><img src="{% static 'assets/img/cupcake.png' %}"></i> <span>Dishes</span></a></li>
+            <li class="{% if request.path == '/order/dessert/{{table_number}}/' %} active {% endif %}"><a class="nav-link" href="/order/dessert/{{table_number}}"><i><img src="{% static 'assets/img/coffee-cup.png' %}"></i> <span>Dessert</span></a></li>
       </div>
 
       <!-- Main Content -->

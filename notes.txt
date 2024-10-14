@@ -30,22 +30,25 @@ done:
 - bedain struk online / dine in #done
 - bedain link nav order online / dine in #done
 - cart ga ada table number #done
+- dashboard page #done
+- order online jadi dine-in terus #done
+- edit stock error input type #done
+- benerin active url #done
 
 todo:
-- kasih alert or pop up after action
-- benerin active url
+- chart total pendapatan
+- order history by invoice
 - finalize design template
-- stock harus selaras satuannya
-- no hape / email untuk konfirmasi pengiriman
-- styling invoice
-- dashboard page
+- benerin penulisan koma
+- pagination
 
 
 optional:
+- kasih alert or pop up after action
+- stock harus selaras satuannya
+- no hape / email untuk konfirmasi pengiriman
 - refactor confirm payment
 - disable checkout when empty
-- pikirin order number
-- beverage + dish + dessert bisa disatu keknya
 - refactor order & cart > mungkin cart pake localstorage, order pake db
 
 
