@@ -34,12 +34,14 @@ done:
 - order online jadi dine-in terus #done
 - edit stock error input type #done
 - benerin active url #done
+- chart total pendapatan #done
+- show image #done
 
 todo:
-- chart total pendapatan
+- styling input type
+- benerin penulisan koma
 - order history by invoice
 - finalize design template
-- benerin penulisan koma
 - pagination
 
 

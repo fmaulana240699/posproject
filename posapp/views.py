@@ -13,12 +13,20 @@ from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
 from django.db.models import Sum
+from django.template import Library
 import qrcode
 import base64
 import json
 
 
 ### Query Dashboard ###
+
+register = Library()
+
+@register.filter
+def to_js_array(value):
+    return ', '.join(map(str, value))
+
 def sum_function(data, name_key, quantity_key):
     result = dict()
     for item in data:
@@ -51,8 +59,25 @@ def total_income(start, end):
         if "total_harga" in d:
             sum_values += d["total_harga"]
 
-    print(sum_values)
     return sum_values
+
+def chart_penjualan(start, end):
+    data_inv = Invoice.objects.filter(created_at__range=(start,end))
+
+    # Group by day
+    days_in_week = {}
+    for invoice in data_inv:
+        day = invoice.created_at.date()
+        if day not in days_in_week:
+            days_in_week[day] = 0
+        days_in_week[day] += invoice.total_harga
+
+    data = {
+        "labels": list([key.strftime('%Y-%m-%d') for key in days_in_week.keys()]),
+        "data": [float(val) for val in days_in_week.values()]
+
+    }
+    return data
 
 def total_order_permenu(start, end):
     orders_today = Order.objects.filter(
@@ -185,27 +210,30 @@ def delete_stock(request, stock_id):
 @user_passes_test(is_admin)
 def dashboard_penjualan(request, range_filter=None):
     now = timezone.now()
-    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
-    today_end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
-    start_of_week = today_start - timedelta(days=today_start.weekday())
-    start_of_month = today_start.replace(day=1)
-
-    if range_filter == 'weekly':
-        today_start = start_of_week
+    if range_filter == None:
+        start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+        end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+    elif range_filter == 'weekly':
+        start = now - timedelta(days=7)
+        end = now
     elif range_filter == 'monthly':
-        today_start = start_of_month
+        start = now - timedelta(days=30)
+        end = now
     else:
-        today_start = today_start
+        raise ValueError("Invalid time range. Use 'today', 'last_week', or 'last_month'.")
 
-    data_most_menu = most_ordered_item_query(today_start, today_end)
-    order_permenu = total_order_permenu(today_start, today_end)
-    data_income = total_income(today_start, today_end)
+    data_most_menu = most_ordered_item_query(start, end)
+    order_permenu = total_order_permenu(start, end)
+    data_income = total_income(start, end)
+
+    testing = chart_penjualan(start, end)
     response_data = {
         "most_menu": list(data_most_menu),
-        "total_inv": invoice_query(today_start, today_end),
-        "total_order": total_order_query(today_start, today_end),
+        "total_inv": invoice_query(start, end),
+        "total_order": total_order_query(start, end),
         "total_penjualan_permenu": order_permenu,
-        "data_income": data_income
+        "data_income": data_income,
+        "chart_penjualan": testing
 
     }
     return render(request, 'index.html', {'response_data': response_data})
@@ -362,7 +390,8 @@ def order_guest(request, category, table_number=None):
 
 def order_history(request):
     data = Order.objects.all()
-    return render(request, 'order-history.html', {'datas': data})
+    data_inv = Invoice.objects.all()
+    return render(request, 'order-history.html', {'datas': data, 'invoices': data_inv})
 
 def cart(request):
     session_id = request.session.session_key
