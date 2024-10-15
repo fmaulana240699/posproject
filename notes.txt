@@ -36,13 +36,15 @@ done:
 - benerin active url #done
 - chart total pendapatan #done
 - show image #done
+- styling input type
 
 todo:
-- styling input type
+- chart penjualan today
+- pagination
 - benerin penulisan koma
 - order history by invoice
 - finalize design template
-- pagination
+
 
 
 optional:

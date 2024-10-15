@@ -36,7 +36,7 @@
                           <th> Description</th>
                           <th> Category </th>
                           <th>Harga</th>
-                          <th> Gambar </th>
+                          <!-- <th> Gambar </th> -->
                           <th>Action</th>
                         </tr>
                         {% for data in datas %}
@@ -45,9 +45,9 @@
                           <td>{{data.description}}</td>
                           <td>{{data.category}}</td>
                           <td> {{data.harga}} </td>
-                          <td>
+                          <!-- <td>
                             <img alt="image" src="assets/img/avatar/avatar-1.png" class="rounded-circle" width="35" data-toggle="tooltip" title="Nur Alpiana">
-                          </td>
+                          </td> -->
                           <td><a href="/menu/edit/{{data.id}}" class="btn btn-primary">Edit</a>
                           <a href="/menu/delete/{{data.id}}" class="btn btn-danger">Delete</a></td>
                         </tr>

@@ -21,12 +21,6 @@ import json
 
 ### Query Dashboard ###
 
-register = Library()
-
-@register.filter
-def to_js_array(value):
-    return ', '.join(map(str, value))
-
 def sum_function(data, name_key, quantity_key):
     result = dict()
     for item in data:
@@ -118,6 +112,8 @@ def management_menu(request):
 def form_menu(request):
     if request.method == 'POST':
         form = MenuForm(request.POST, request.FILES)
+        print(form.is_valid())
+        print(form.errors)
         if form.is_valid():
             menu_instance = form.save()
 
@@ -147,14 +143,19 @@ def edit_menu(request, menu_id):
     data_menu = get_object_or_404(MenuItem, id=menu_id)
 
     if request.method == 'POST':
-        form = MenuForm(request.POST, instance=data_menu)
+        form = MenuForm(request.POST, request.FILES, instance=data_menu)
+        print(form.is_valid())
         if form.is_valid():
             form.save()
             return redirect('/menu')
+        else:
+            print(form.errors)
     else:
         form = MenuForm(instance=data_menu)
+        data_bahan_baku = BahanBaku.objects.all()
+        bahan_baku_per_menu = BahanBakuPerMenu.objects.filter(menu_item=data_menu)
 
-    return render(request, 'edit-menu.html', {'form': form})
+    return render(request, 'edit-menu.html', {'form': form, 'data_bahan_baku': data_bahan_baku, 'bahan_baku_per_menu': bahan_baku_per_menu,})
 
 @login_required
 @user_passes_test(is_admin)
@@ -225,6 +226,8 @@ def dashboard_penjualan(request, range_filter=None):
     data_most_menu = most_ordered_item_query(start, end)
     order_permenu = total_order_permenu(start, end)
     data_income = total_income(start, end)
+    print(data_most_menu)
+
 
     testing = chart_penjualan(start, end)
     response_data = {
@@ -236,6 +239,7 @@ def dashboard_penjualan(request, range_filter=None):
         "chart_penjualan": testing
 
     }
+    print(testing)
     return render(request, 'index.html', {'response_data': response_data})
 
 @login_required

@@ -9,7 +9,7 @@ class BahanBaku(models.Model):
 class MenuItem(models.Model):
     nama_menu = models.CharField(max_length=255)
     description = models.TextField()
-    harga = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+    harga = models.DecimalField(max_digits=10, decimal_places=2, null=True)
     category = models.CharField(choices=[('beverages', 'Beverages'), ('dishes', 'Dishes'), ('dessert', 'Dessert')], max_length=10, null=True)
     bahan_baku = models.ManyToManyField(BahanBaku, null=True)
     gambar = models.ImageField(upload_to='menu_images/', null=True, blank=True)
