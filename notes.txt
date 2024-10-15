@@ -37,10 +37,10 @@ done:
 - chart total pendapatan #done
 - show image #done
 - styling input type
-
-todo:
 - chart penjualan today
 - pagination
+
+todo:
 - benerin penulisan koma
 - order history by invoice
 - finalize design template

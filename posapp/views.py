@@ -12,8 +12,7 @@ from .models import MenuItem, BahanBaku, TableQr, Order, BahanBakuPerMenu, Invoi
 from django.http import HttpResponse
 from django.template.loader import get_template
 from xhtml2pdf import pisa
-from django.db.models import Sum
-from django.template import Library
+from django.core.paginator import Paginator
 import qrcode
 import base64
 import json
@@ -71,7 +70,37 @@ def chart_penjualan(start, end):
         "data": [float(val) for val in days_in_week.values()]
 
     }
+
     return data
+
+def chart_penjualan_hourly(start, end):
+    data_inv = Invoice.objects.filter(created_at__range=(start, end))
+
+    # Generate a list of all hours within the range
+    all_hours = [start + timedelta(hours=hour) for hour in range(round((end - start).total_seconds() / 3600) + 1)]
+
+    # Group by hour
+    hourly_data = {}
+    for invoice in data_inv:
+        hour = invoice.created_at.hour
+        if hour not in hourly_data:
+            hourly_data[hour] = 0
+        hourly_data[hour] += invoice.total_harga
+
+    # Fill in missing hours with zero values
+    for hour in all_hours:
+        hour_int = int(hour.hour)  # Convert hour_int to an integer
+        if hour_int not in hourly_data:
+            hourly_data[hour_int] = 0
+
+    # Convert to list format
+    data = {
+        "labels": [f"{hour:02d}:00" for hour in sorted(hourly_data.keys())],
+        "data": [hourly_data[hour] for hour in sorted(hourly_data.keys())]
+    }
+
+    return data
+
 
 def total_order_permenu(start, end):
     orders_today = Order.objects.filter(
@@ -95,7 +124,7 @@ def is_admin(user):
 @login_required
 @user_passes_test(is_admin)
 def index(request):
-    return render(request, 'index.html')
+    return render(request, 'welcome.html')
 
 @login_required
 @user_passes_test(is_admin)
@@ -105,7 +134,10 @@ def management_menu(request):
         menus = MenuItem.objects.filter(nama_menu__icontains=query)
     else:
         menus = MenuItem.objects.all()
-    return render(request, 'management-menu.html', {'datas': menus})
+        paginator = Paginator(menus, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+    return render(request, 'management-menu.html', {'datas': page_obj})
 
 @login_required
 @user_passes_test(is_admin)
@@ -172,7 +204,10 @@ def management_stock(request):
         bahan_baku = BahanBaku.objects.filter(name__icontains=query)
     else:
         bahan_baku = BahanBaku.objects.all()
-    return render(request, 'management-stock.html', {'datas': bahan_baku})
+        paginator = Paginator(bahan_baku, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
+    return render(request, 'management-stock.html', {'datas': page_obj})
 
 @login_required
 @user_passes_test(is_admin)
@@ -214,32 +249,33 @@ def dashboard_penjualan(request, range_filter=None):
     if range_filter == None:
         start = now.replace(hour=0, minute=0, second=0, microsecond=0)
         end = now.replace(hour=23, minute=59, second=59, microsecond=999999)
+        data_penjualan = chart_penjualan_hourly(start, end)
     elif range_filter == 'weekly':
         start = now - timedelta(days=7)
         end = now
+        data_penjualan = chart_penjualan(start, end)
     elif range_filter == 'monthly':
         start = now - timedelta(days=30)
         end = now
+        data_penjualan = chart_penjualan(start, end)
     else:
         raise ValueError("Invalid time range. Use 'today', 'last_week', or 'last_month'.")
 
     data_most_menu = most_ordered_item_query(start, end)
     order_permenu = total_order_permenu(start, end)
     data_income = total_income(start, end)
-    print(data_most_menu)
 
 
-    testing = chart_penjualan(start, end)
     response_data = {
         "most_menu": list(data_most_menu),
         "total_inv": invoice_query(start, end),
         "total_order": total_order_query(start, end),
         "total_penjualan_permenu": order_permenu,
         "data_income": data_income,
-        "chart_penjualan": testing
+        "chart_penjualan": data_penjualan
 
     }
-    print(testing)
+    # print(chart_penjualan_hourly(start, end))
     return render(request, 'index.html', {'response_data': response_data})
 
 @login_required
@@ -317,8 +353,6 @@ def order_delete(request, order_id):
     for item in check_stock:
         ingredient = item.bahan_baku
         item_quantity = item.quantity.to_decimal()
-        print(type(item_quantity))
-        print(type(quantity))
         updated_stock = ingredient.stock.to_decimal()
         updated_stock += item_quantity * quantity
         ingredient.stock = updated_stock
@@ -394,8 +428,10 @@ def order_guest(request, category, table_number=None):
 
 def order_history(request):
     data = Order.objects.all()
-    data_inv = Invoice.objects.all()
-    return render(request, 'order-history.html', {'datas': data, 'invoices': data_inv})
+    paginator = Paginator(data, 10)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    return render(request, 'order-history.html', {'datas': page_obj})
 
 def cart(request):
     session_id = request.session.session_key
