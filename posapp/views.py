@@ -132,6 +132,9 @@ def management_menu(request):
     query = request.GET.get('q')
     if query:
         menus = MenuItem.objects.filter(nama_menu__icontains=query)
+        paginator = Paginator(menus, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
     else:
         menus = MenuItem.objects.all()
         paginator = Paginator(menus, 10)
@@ -202,6 +205,9 @@ def management_stock(request):
     query = request.GET.get('q')
     if query:
         bahan_baku = BahanBaku.objects.filter(name__icontains=query)
+        paginator = Paginator(bahan_baku, 10)
+        page_number = request.GET.get('page')
+        page_obj = paginator.get_page(page_number)
     else:
         bahan_baku = BahanBaku.objects.all()
         paginator = Paginator(bahan_baku, 10)

@@ -67,6 +67,7 @@
                       <div class="card-body">
                           <form method="POST" action="/checkout">
                               {% csrf_token %}
+                              {% if datas.0.order_type == "Online" %}
                               <div class="form-group">
                                   <label>Atas Nama</label>
                                   <input type="text" class="form-control" name="atas_nama" required>
@@ -75,6 +76,7 @@
                                   <label>Alamat</label>
                                   <input type="text" class="form-control" name="alamat" required>
                               </div>
+                              {% endif %}
                               <button class="btn btn-primary">Checkout</button>
                           </form>
                       </div>
